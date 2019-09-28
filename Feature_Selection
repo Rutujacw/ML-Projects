@@ -1,0 +1,143 @@
+###########################################################################
+Feature selection using SVM methodology in Python with scikit-learn library
+###########################################################################
+
+#######################################################
+ Import  required libraries
+#######################################################
+import sys
+from sys import argv
+import random
+import math
+import time
+from sklearn.svm import LinearSVC
+from sklearn.metrics import confusion_matrix
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn import tree
+
+def ParseFile(argumentNo):
+    data = []
+    c = 0
+    readStartTime = int(round(time.time()))
+    try:
+        file = sys.argv[argumentNo]
+    except IndexError:
+        print("Improper Arguments")
+        sys.exit()
+
+    with open(file) as dFile:
+        for line in dFile:
+            #c += 1
+            #if (c % 2 == 0):
+            	data.append([int(l) for l in line.split()])
+			
+
+    print("time taken:", int(round(time.time())) - readStartTime)
+    return data
+
+
+def attrCalculation(data,trainlabels):
+	LinearSVM=LinearSVC(C=0.0050, penalty='l1', dual=False).fit(data, [x[0] for x in trainlabels])
+	SVMscore = LinearSVM.coef_
+	#print(SVMscore)
+	attr = []
+	attr_cols = []
+	for l in range(len(SVMscore[0])):
+		print(l)
+		if (SVMscore[0][l] != 0.0):
+			#print(SVMscore[0][l])
+			attr_cols.append(int(l))
+			rowdata = []
+			for i in range(len(data)):
+				rowdata.append(data[i][l])
+			attr.append(rowdata)
+		bestattrs_data = [list(map(float, x)) for x in zip(*attr)]
+
+	if(len(bestattrs_data)==0):
+		return data,attr_cols
+
+	return bestattrs_data,attr_cols
+
+##############################################################
+#Division of training dataset in 90% training and 10% testing 
+##############################################################
+def CreateTrainingDataSet(data, labels):
+	predictdata = []
+	actualLabels=[]
+	rf = int(len(data) * 0.1)
+	predictlabels = []
+	if rf < 1:
+		rf = 1
+	for x in range(0, rf, 1):
+		num = random.randrange(0, (len(data) - 1))
+		predictlabels.append(num)
+		predictdata.append(data[num])
+		actualLabels.append(labels[num][0])
+		del data[num]
+		del labels[num]
+
+	return data, labels, predictdata, predictlabels, actualLabels
+
+
+##########################################
+#Prediction of Test data
+##########################################
+def PredictLabels(traindata, trainlabels, testdata):
+
+    clf = LinearSVC(max_iter=15000000, tol=0.00000001).fit(traindata, [x[0] for x in trainlabels])
+    #clf=LogisticRegression(C=1, penalty='l1', tol=0.01).fit(traindata, [x[0] for x in trainlabels])
+   # clf = tree.DecisionTreeClassifier().fit(traindata,[x[0] for x in trainlabels])		#Lowest Accuracy
+    #clf=GaussianNB().fit(traindata,[x[0] for x in trainlabels])	
+    predictedlabels = clf.predict((testdata))
+    return True,predictedlabels
+
+def CalAccuracy(actualLabels,predictedlabels):
+
+	true=0
+	false=0
+	for i in range(0,len(predictedlabels)):
+		if((actualLabels[i] == 0 and predictedlabels[i] == 0) or (actualLabels[i] == 1 and predictedlabels[i] == 1)):
+
+			true+=1
+		else:
+			false+=1
+
+	accuracy=float(true)/(true+false)
+
+	print(actualLabels)
+	print(predictedlabels)
+
+	print(true)
+	print(false)
+	return accuracy*100
+		
+def main():
+	startTime = time.time()
+
+	data =ParseFile(1)
+	labels=ParseFile(2)
+
+
+	print("Feature START")
+	bestfeatures_data,feature_cols = attrCalculation(data, labels)
+	print(len(bestfeatures_data))
+	#print(len(feature_cols),len(data[0]))
+	print("Feature END")
+
+	print("Predicted Labels START")
+	traindata, trainlabels, predictdata, predictLabels, actualLabels = CreateTrainingDataSet(bestfeatures_data,labels)
+	isPredicted,predictedlabels = PredictLabels(traindata, trainlabels, predictdata)
+	accuracy=CalAccuracy(actualLabels,predictedlabels)
+	print("Accuracy: ",accuracy)
+	print("Predicted Labels END")
+
+	#data, labels, predictdata, predictlabels, actualLabels = CreateTrainingDataSet(data,labels)
+	#print(len(data),len(labels),len(predictdata))
+	#isPredicted,predictedlabels = PredictLabels(data, labels, predictdata)
+	#accuracy=CalAccuracy(actualLabels,predictedlabels)
+	#print("Accuracy: ",accuracy)
+
+	print("Total Execution Time: ", int((time.time() - startTime) / 60), "minutes", int((time.time() - startTime) % 60), "seconds")
+
+main()
