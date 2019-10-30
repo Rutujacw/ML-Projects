@@ -1,0 +1,115 @@
+#########################################################
+                Naive Bayes Classifier
+#########################################################
+
+import sys
+import math
+
+###############################
+  Read the Data from the file
+###############################
+
+#f1= open('C:\\Users\\rutuj\\PycharmProjects\\Gradient\\ionosphere.data')
+filename = sys.argv[1]
+f1 = open(filename, "r")
+i = 0
+data = []
+l = f1.readline()
+while (l != ""):
+    a = l.split()
+    l2 = []
+    for j in range(0, len(a), 1):
+        l2.append(float(a[j]))
+    data.append(l2)
+    l = f1.readline()
+
+rows = len(data)
+cols = len(data[0])
+f1.close()
+
+############################
+   Read labels from file
+############################
+
+#f2= open('C:\\Users\\rutuj\\PycharmProjects\\Gradient\\ionosphere.trainlabels.0')
+filename = sys.argv[2]
+f2 = open(filename, "r")
+labels = {}
+n = []
+n.append(0)
+n.append(0)
+l2 = f2.readline()
+while (l2 != ''):
+    b = l2.split()
+    labels[int(b[1])] = int(b[0])
+    l2 = f2.readline()
+    n[int(b[0])] += 1
+f2.close()
+
+#################################
+     Calculating the mean
+#################################
+
+m0 = []
+for i in range(0, cols, 1):
+    m0.append(1)
+m1 = []
+for i in range(0, cols, 1):
+    m1.append(1)
+
+for i in range(0, rows, 1):
+    if (labels.get(i) != None and labels[i] == 0):
+        for j in range(0, cols, 1):
+            m0[j] += data[i][j]
+    if (labels.get(i) != None and labels[i] == 1):
+        for j in range(0, cols, 1):
+            m1[j] += data[i][j]
+
+for j in range(0, cols, 1):
+    m0[j] /= n[0]
+    m1[j] /= n[1]
+
+
+#############################	
+   Calculating the variance
+#############################
+
+var0 = []
+for i in range(0, cols, 1):
+    var0.append(0)
+var1 = []
+for i in range(0, cols, 1):
+    var1.append(0)
+
+for i in range(0, rows, 1):
+    if (labels.get(i) != None and labels[i] == 0):
+        for j in range(0, cols, 1):
+            var0[j] += (m0[j] - data[i][j]) ** 2
+    if (labels.get(i) != None and labels[i] == 1):
+        for j in range(0, cols, 1):
+            var1[j] += (m1[j] - data[i][j]) ** 2
+
+for j in range(0, cols, 1):
+    var0[j] = math.sqrt(var0[j]/n[0])
+    var1[j] = math.sqrt(var1[j]/n[1])
+
+############################
+      Classification
+############################
+
+c = {}
+for i in range(0, rows, 1):
+    if (labels.get(i) == None):
+        w0 = 0
+        w1 = 0
+        for j in range(0, cols, 1):
+            w0 += ((m0[j] - data[i][j])/var0[j]) ** 2
+            w1 += ((m1[j] - data[i][j])/var1[j]) ** 2
+
+        if (w0 < w1):
+                print("0", i)
+                c[i] = 0
+
+        else:
+                print("1", i)
+                c[i] = 1
