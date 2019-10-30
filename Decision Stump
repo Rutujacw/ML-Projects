@@ -1,0 +1,109 @@
+#############################################################################################
+A program that determines the column with the best split for the CART decision tree algorithm.
+This code will traverse all columns in the data and output the column and the threshold 
+that gives the lowest gini index.
+#############################################################################################
+
+
+import sys
+
+#################
+Read Data 
+#################
+
+#f= open ("C:\\Users\\rutuj\\PycharmProjects\\Decision_stump\\test.data")
+f = open(argv[1])
+data = []
+l = f.readline()
+while (l != ''):
+    a = l.split()
+    l2 = []
+    for j in range(0, len(a), 1):
+        l2.append(float(a[j]))
+    data.append(l2)
+    l = f.readline()
+datarows = len(data)
+datacols = len(data[0])
+print("Columns:" , datacols)
+f.close()
+
+###############################
+Read training labels 
+###############################
+
+trainlabels = {}
+#f= open ("C:\\Users\\rutuj\\PycharmProjects\\Decision_stump\\test.label")
+f = open(argv[2])
+l = f.readline()
+num = []
+num.append(0)
+num.append(0)
+while (l != ''):
+    a = l.split()
+    trainlabels[int(a[1])] = int(a[0])
+    num[int(a[0])] = num[int(a[0])] + 1
+    l = f.readline()
+f.close()
+
+ginicount = []
+split = 0
+l3 = [0, 0]
+for j in range(0, datacols, 1):
+    ginicount.append(l3)
+t = 0
+col = 0
+
+###############################################
+Find the values that gives minimum gini split
+###############################################
+
+for j in range(0, datacols, 1):
+
+    listcol = [item[j] for item in data]
+    keys = sorted(range(len(listcol)), key=lambda k: listcol[k])
+    listcol.sort()
+    #print("sorted list",listcol)
+    #print("keys ",keys)
+    val = []
+    prevgini = 0
+    prevrow = 0
+    for k in range(1, datarows, 1):
+
+        lsize = k
+        rsize = datarows - k
+        lp = 0
+        rp = 0
+
+        for l in range(0, k, 1):
+            if (trainlabels.get(keys[l]) == 0):
+                lp += 1
+        for r in range(k, datarows, 1):
+            if (trainlabels.get(keys[r]) == 0):
+                rp += 1
+                
+        #############################
+        evaluate the gini of a split 
+        #############################
+        
+        gini = (lsize / datarows) * (lp / lsize) * (1 - lp / lsize) + (rsize / datarows) * (rp / rsize) * (
+            1 - rp / rsize)
+
+        val.append(gini)
+        prevgini = min(val)
+
+        if (val[k - 1] == float(prevgini)):
+            ginicount[j][0] = val[k - 1]
+            ginicount[j][1] = k
+
+    if (j == 0):
+        t = ginicount[j][0]
+
+
+    if (ginicount[j][0] <= t):
+        t = ginicount[j][0]
+        col = j
+        split = ginicount[j][1]
+        if (split != 0):
+            split = (listcol[split] + listcol[split - 1]) / 2
+
+print( "column : ", col, "split value : ", split)
